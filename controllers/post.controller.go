@@ -50,3 +50,35 @@ func (pc *PostController) CreatePost(cntxt *gin.Context) {
 
 	cntxt.JSON(http.StatusCreated, gin.H{"Status": "Success", "Message": newPost})
 }
+
+func (pc *PostController) UpdatePost(cntxt *gin.Context) {
+	postId := cntxt.Param("postId")
+	currUser := cntxt.MustGet("currentUser").(models.User)
+
+	var payload *models.UpdatePost
+	if err := cntxt.ShouldBindJSON(&payload); err != nil {
+		cntxt.JSON(http.StatusBadGateway, gin.H{"Status": "Error", "Message": err.Error()})
+		return
+	}
+
+	var updatePost models.Post
+	res := pc.DB.First(&updatePost, "Id = ?", postId)
+	if res.Error != nil {
+		cntxt.JSON(http.StatusNotFound, gin.H{"Status": "Fail", "Message": "No post with that title exists"})
+		return
+	}
+
+	now := time.Now()
+	postToUpdate := models.Post{
+		Title:     payload.Title,
+		Content:   payload.Content,
+		Image:     payload.Image,
+		User:      currUser.ID,
+		CreatedAt: updatePost.CreatedAt,
+		UpdatedAt: now,
+	}
+
+	pc.DB.Model(&updatePost).Updates(postToUpdate)
+
+	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Data": updatePost})
+}
