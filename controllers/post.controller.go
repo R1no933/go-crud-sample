@@ -113,3 +113,16 @@ func (pc *PostController) FindPosts(cntxt *gin.Context) {
 	}
 	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Results": len(posts), "Data": posts})
 }
+
+func (pc *PostController) DeletePost(cntxt *gin.Context) {
+	postId := cntxt.Param("postId")
+
+	res := pc.DB.Delete(&models.Post{}, "id = ?", postId)
+
+	if res.Error != nil {
+		cntxt.JSON(http.StatusNotFound, gin.H{"Status": "Fail", "Message": "No post with that title exists"})
+		return
+	}
+
+	cntxt.JSON(http.StatusNoContent, nil)
+}
