@@ -82,3 +82,16 @@ func (pc *PostController) UpdatePost(cntxt *gin.Context) {
 
 	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Data": updatePost})
 }
+
+func (pc *PostController) FindPostById(cntxt *gin.Context) {
+	postId := cntxt.Param("postId")
+
+	var post models.Post
+	res := pc.DB.First(&post, "id = ?", postId)
+	if res.Error != nil {
+		cntxt.JSON(http.StatusNotFound, gin.H{"Status": "Fail", "Message": "No post with that title exists"})
+		return
+	}
+
+	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Data": post})
+}
