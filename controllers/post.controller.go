@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -94,4 +95,21 @@ func (pc *PostController) FindPostById(cntxt *gin.Context) {
 	}
 
 	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Data": post})
+}
+
+func (pc *PostController) FindPosts(cntxt *gin.Context) {
+	var page = cntxt.DefaultQuery("page", "1")
+	var limit = cntxt.DefaultQuery("limit", "10")
+
+	intPage, _ := strconv.Atoi(page)
+	intLimit, _ := strconv.Atoi(limit)
+	offset := (intPage - 1) * intLimit
+
+	var posts []models.Post
+	res := pc.DB.Limit(intLimit).Offset(offset).Find(&posts)
+	if res.Error != nil {
+		cntxt.JSON(http.StatusBadGateway, gin.H{"Status": "Error", "Message": res.Error})
+		return
+	}
+	cntxt.JSON(http.StatusOK, gin.H{"Status": "Success", "Results": len(posts), "Data": posts})
 }
